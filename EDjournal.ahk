@@ -12,6 +12,20 @@ class EDjournal
     
     static monitoredEvents := {}
 
+    lastModificationDate[]
+    {
+        get
+        {
+            RegRead, date, HKCU\SOFTWARE\EDJournal\%A_ScriptName%, lastModificationDate
+            return (date == "") ? "19840920000000" : date ; provide a default if lastModificationDate doesn't exist yet
+        }
+        set
+        {
+            RegWrite, REG_SZ, HKCU\SOFTWARE\EDJournal\%A_ScriptName%, lastModificationDate, %value%
+            return not ErrorLevel ; inverted so that a if (lastModificationDate := "123") works as expected
+        }
+    }
+
     getLogFolderPath()
     {
         static journalPath
@@ -63,9 +77,37 @@ class EDjournal
     }
 }
 
-Clipboard := EDjournal.getLogfileList()
-MsgBox
-Clipboard := EDjournal.getLogfileList(true)
+
+
+/*
+
+    ; logic of logfile names:
+    ; on every startup elite creates a new logfile using current day and time for the name
+    ; restarting elite on the same day will result in another logfile with a name differing in time only
+    ; crossing midnight into a new day will not cause a new logfile
+    ; for a regular run a logfile will contain at minimum a fileheader and a shutdown event
+        ; { "timestamp":"2022-04-28T15:14:44Z", "event":"Fileheader", "part":1, "language":"English/UK", "Odyssey":true, "gameversion":"4.0.0.1201", "build":"r282352/r0 " }
+        ; { "timestamp":"2022-04-28T15:19:17Z", "event":"Shutdown" }
+    ; 
+
+
+    if (logFileNamePattern == "")
+    {
+        ; C:\Users\Maya\Saved Games\Frontier Developments\Elite Dangerous
+        EnvGet, logFolderPath, USERPROFILE
+        logFolderPath .= "\Saved Games\Frontier Developments\Elite Dangerous\"
+        logFileNamePattern := logFolderPath . "Journal.*-*-*.log"
+    }
+
+    if (not WinExist(elite) )
+    {
+        ; Wait until ED has been started and then give it time to start today's log file
+        WinWait, %elite%
+        ; at this point elite will create a new logfile as part of its startup
+        logFileNamePattern := logFolderPath . "Journal." . A_YYYY . "-" . A_MM . "-" . A_DD . "*.log"
+        While, not FileExist(logFileNamePattern)
+            Sleep, 1000
+    }
 
 /*
 ; get list of logs
