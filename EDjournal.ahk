@@ -26,15 +26,22 @@ class EDjournal
         }
     }
 
-    getLogFolderPath()
+    journalPath[]
     {
-        static journalPath
-        if (journalPath == "")
+        get
         {
-            EnvGet, journalPath, USERPROFILE
-            journalPath .= "\Saved Games\Frontier Developments\Elite Dangerous\"
+            static journalPath
+            if (journalPath == "")
+            {
+                EnvGet, journalPath, USERPROFILE
+                journalPath .= "\Saved Games\Frontier Developments\Elite Dangerous\"
+            }
+            return journalPath
         }
-        Return journalPath
+        set
+        {
+            return ; prevent accidental overwrite via base.set
+        }
     }
 
     getLogfileList(reverse := false)
