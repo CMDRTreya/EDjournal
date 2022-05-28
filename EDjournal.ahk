@@ -26,15 +26,22 @@ class EDjournal
         }
     }
 
-    getLogFolderPath()
+    journalPath[]
     {
-        static journalPath
-        if (journalPath == "")
+        get
         {
-            EnvGet, journalPath, USERPROFILE
-            journalPath .= "\Saved Games\Frontier Developments\Elite Dangerous\"
+            static journalPath
+            if (journalPath == "")
+            {
+                EnvGet, journalPath, USERPROFILE
+                journalPath .= "\Saved Games\Frontier Developments\Elite Dangerous\"
+            }
+            return journalPath
         }
-        Return journalPath
+        set
+        {
+            return ; prevent accidental overwrite via base.set
+        }
     }
 
     getLogfileList(reverse := false)
@@ -45,7 +52,7 @@ class EDjournal
         ; on first call
         if (FileListOld == "")
         {
-            Loop, Files, % this.getLogFolderPath() . "Journal.*.log"
+            Loop, Files, % this.journalPath . "Journal.*.log"
             {
                 ; move new naming convention log files into separate list
                 if InStr(A_LoopFileName, "-")
@@ -60,7 +67,7 @@ class EDjournal
             Sort, fileListOldReversed, R
         }
         Else
-            Loop, Files, % this.getLogFolderPath() . "Journal.*-*.log"
+            Loop, Files, % this.journalPath . "Journal.*-*.log"
                 FileListNew .= A_LoopFileName "`n"
 
         ; sort lists alphabetically
